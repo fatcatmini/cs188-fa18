@@ -399,11 +399,36 @@ def cornersHeuristic(state, problem):
     shortest path from the state to a goal of the problem; i.e.  it should be
     admissible (as well as consistent).
     """
-    corners = problem.corners  # These are the corner coordinates
-    walls = problem.walls  # These are the walls of the maze, as a Grid (game.py)
+    # corners = problem.corners  # These are the corner coordinates
+    # walls = problem.walls  # These are the walls of the maze, as a Grid (game.py)
 
     "*** YOUR CODE HERE ***"
-    return 0  # Default to trivial solution
+    currPos = state[0]
+    cornersLeft = list(state[1])
+    totalDist = 0
+
+    while len(cornersLeft) != 0:
+        targetCorner = cornersLeft[0]
+        targetDist = manhDist(currPos, targetCorner)
+        for corner in cornersLeft:
+            thisDist = manhDist(currPos, corner)
+            if thisDist < targetDist:
+                targetDist = thisDist
+                targetCorner = corner
+
+        totalDist += manhDist(currPos, targetCorner)
+        currPos = targetCorner
+        cornersLeft.remove(targetCorner)
+
+    return totalDist
+
+
+def eucDist(tup1, tup2):
+    return ((tup1[0] - tup2[0])**2 + (tup1[1] - tup2[1])**2)**0.5
+
+
+def manhDist(tup1, tup2):
+    return abs(tup1[0] - tup2[0]) + abs(tup1[1] - tup2[1])
 
 
 class AStarCornersAgent(SearchAgent):
@@ -510,7 +535,39 @@ def foodHeuristic(state, problem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
-    return 0
+
+    if foodGrid.count() == 0:
+        return 0
+
+    availableFoods = []
+    for x in range(1, foodGrid.width - 1):
+        for y in range(1, foodGrid.height - 1):
+            if foodGrid[x][y]:
+                availableFoods.append((x, y))
+
+    # print(foodGrid)
+    # print()
+    # print(availableFoods.__len__())
+    # print(availableFoods)
+    # exit()
+
+    totalDist = 0
+    while len(availableFoods) != 0:
+        targetFood = availableFoods[0]
+        targetDist = manhDist(position, targetFood)
+        for food in availableFoods:
+            thisDist = manhDist(position, food)
+            if thisDist < targetDist:
+                targetDist = thisDist
+                targetFood = food
+
+        totalDist += manhDist(position, targetFood)
+        position = targetFood
+        availableFoods.remove(targetFood)
+
+    # print(True, totalDist)
+
+    return totalDist / 2
 
 
 class ClosestDotSearchAgent(SearchAgent):
