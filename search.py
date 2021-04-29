@@ -86,110 +86,83 @@ def depthFirstSearch(problem):
     print("Start's successors:", problem.getSuccessors(problem.getStartState()))
     """
     "*** YOUR CODE HERE ***"
-    path = []
-    keyFromValPath = {}
+
     closed = set()
     fringe = util.Stack()
 
-    startState = (problem.getStartState(), '', 0)
+    # repr: tup, list (of actions to current position)
+    startState = (problem.getStartState(), [])
     fringe.push(startState)
 
     while True:
         if fringe.isEmpty():
             return None
 
-        poppedState = fringe.pop()
-        if problem.isGoalState(poppedState[0]):
-            while poppedState != startState:
-                path.insert(0, poppedState[1])
-                poppedState = keyFromValPath[poppedState]
-            return path
+        poppedStateLoc, currPath = fringe.pop()
+        if problem.isGoalState(poppedStateLoc):
+            return currPath
 
-        if poppedState[0] not in closed:
-            closed.add(poppedState[0])
-            for successor in problem.getSuccessors(poppedState[0]):
-                fringe.push(successor)
-                keyFromValPath[successor] = poppedState
+        if poppedStateLoc not in closed:
+            closed.add(poppedStateLoc)
+            for successor in problem.getSuccessors(poppedStateLoc):
+                successorLoc, action, _ = successor
+                successorPath = currPath + [action]
+                fringe.push((successorLoc, successorPath))
 
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
-    path = []
-    keyFromValPath = {}
+
     closed = set()
     fringe = util.Queue()
 
-    startState = (problem.getStartState(), '', 0)
+    # repr: tup, list (of actions to current position)
+    startState = (problem.getStartState(), [])
     fringe.push(startState)
 
     while True:
         if fringe.isEmpty():
             return None
 
-        poppedState = fringe.pop()
-        if problem.isGoalState(poppedState[0]):
-            while poppedState != startState:
-                path.insert(0, poppedState[1])
-                poppedState = keyFromValPath[poppedState]
-            return path
+        poppedStateLoc, currPath = fringe.pop()
+        if problem.isGoalState(poppedStateLoc):
+            return currPath
 
-        if poppedState[0] not in closed:
-            closed.add(poppedState[0])
-            for successor in problem.getSuccessors(poppedState[0]):
-                fringe.push(successor)
-                keyFromValPath[successor] = poppedState
+        if poppedStateLoc not in closed:
+            closed.add(poppedStateLoc)
+            for successor in problem.getSuccessors(poppedStateLoc):
+                successorLoc, action, _ = successor
+                successorPath = currPath + [action]
+                fringe.push((successorLoc, successorPath))
 
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
-    path = []
-    keyFromValPath = {}
 
-    backwardCost = {}
     closed = set()
     fringe = util.PriorityQueue()
 
-    locToState = {}
-
-    startState = (problem.getStartState(), '', 0)
-    backwardCost[startState[0]] = 0
-    fringe.push(startState[0], backwardCost[startState[0]])
+    startState = (problem.getStartState(), [], 0)
+    fringe.push(startState, startState[2])
 
     while True:
         if fringe.isEmpty():
             return None
 
-        poppedStateLoc = fringe.pop()
+        poppedStateLoc, currPath, currCost = fringe.pop()
         if problem.isGoalState(poppedStateLoc):
-
-            while poppedStateLoc != startState[0]:
-                poppedState = locToState[poppedStateLoc]
-                path.insert(0, poppedState[1])
-                poppedStateLoc = keyFromValPath[poppedState]
-            return path
+            return currPath
 
         if poppedStateLoc not in closed:
             closed.add(poppedStateLoc)
             for successor in problem.getSuccessors(poppedStateLoc):
-
-                thisCost = backwardCost[poppedStateLoc] + successor[2]
-                if backwardCost.get(successor[0]) == None:
-                    backwardCost[successor[0]] = thisCost
-                    fringe.push(successor[0], backwardCost[successor[0]])
-                    keyFromValPath[successor] = poppedStateLoc
-                    locToState[successor[0]] = successor
-                else:
-                    if thisCost < backwardCost[successor[0]]:
-                        backwardCost[successor[0]] = thisCost
-                        origState = locToState[successor[0]]
-                        # remove the original k-v pair
-                        keyFromValPath.pop(origState)
-                        # add the new one
-                        locToState[successor[0]] = successor
-                        keyFromValPath[successor] = poppedStateLoc
-                        fringe.update(successor[0], backwardCost[successor[0]])
+                successorLoc, action, cost = successor
+                successorPath = currPath + [action]
+                successorCost = currCost + cost
+                fringe.push((successorLoc, successorPath, successorCost),
+                            successorCost)
 
 
 def nullHeuristic(state, problem=None):
@@ -203,58 +176,33 @@ def nullHeuristic(state, problem=None):
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
-    path = []
-    keyFromValPath = {}
 
-    backwardCost = {}
     closed = set()
     fringe = util.PriorityQueue()
 
-    locToState = {}
-
-    startState = (problem.getStartState(), '', 0)
-    backwardCost[startState[0]] = 0
-    fringe.push(
-        startState[0],
-        backwardCost[startState[0]] + heuristic(startState[0], problem))
+    startState = (problem.getStartState(), [], 0)
+    startPriority = startState[2] + heuristic(startState[0], problem)
+    fringe.push(startState, startPriority)
 
     while True:
         if fringe.isEmpty():
             return None
 
-        poppedStateLoc = fringe.pop()
+        poppedStateLoc, currPath, currCost = fringe.pop()
         if problem.isGoalState(poppedStateLoc):
-
-            while poppedStateLoc != startState[0]:
-                poppedState = locToState[poppedStateLoc]
-                path.insert(0, poppedState[1])
-                poppedStateLoc = keyFromValPath[poppedState]
-            return path
+            return currPath
 
         if poppedStateLoc not in closed:
             closed.add(poppedStateLoc)
             for successor in problem.getSuccessors(poppedStateLoc):
+                successorLoc, action, cost = successor
+                successorPath = currPath + [action]
+                successorCost = currCost + cost
 
-                thisCost = backwardCost[poppedStateLoc] + successor[2]
-                if backwardCost.get(successor[0]) == None:
-                    backwardCost[successor[0]] = thisCost
-                    fringe.push(
-                        successor[0], backwardCost[successor[0]] +
-                        heuristic(successor[0], problem))
-                    keyFromValPath[successor] = poppedStateLoc
-                    locToState[successor[0]] = successor
-                else:
-                    if thisCost < backwardCost[successor[0]]:
-                        backwardCost[successor[0]] = thisCost
-                        origState = locToState[successor[0]]
-                        # remove the original k-v pair
-                        keyFromValPath.pop(origState)
-                        # add the new one
-                        locToState[successor[0]] = successor
-                        keyFromValPath[successor] = poppedStateLoc
-                        fringe.update(
-                            successor[0], backwardCost[successor[0]] +
-                            heuristic(successor[0], problem))
+                successorPriority = successorCost + heuristic(
+                    successorLoc, problem)
+                fringe.push((successorLoc, successorPath, successorCost),
+                            successorPriority)
 
 
 # Abbreviations
