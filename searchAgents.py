@@ -539,35 +539,31 @@ def foodHeuristic(state, problem):
     if foodGrid.count() == 0:
         return 0
 
-    availableFoods = []
+    nodesLeft = [position]
     for x in range(1, foodGrid.width - 1):
         for y in range(1, foodGrid.height - 1):
             if foodGrid[x][y]:
-                availableFoods.append((x, y))
+                nodesLeft.append((x, y))
 
-    # print(foodGrid)
-    # print()
-    # print(availableFoods.__len__())
-    # print(availableFoods)
-    # exit()
+    # MST?
+    fringe = util.PriorityQueue()
+    fringe.push(position, 0)
+    dist = 0
+    priorities = {position: 0}
 
-    totalDist = 0
-    while len(availableFoods) != 0:
-        targetFood = availableFoods[0]
-        targetDist = manhDist(position, targetFood)
-        for food in availableFoods:
-            thisDist = manhDist(position, food)
-            if thisDist < targetDist:
-                targetDist = thisDist
-                targetFood = food
+    while not fringe.isEmpty():
 
-        totalDist += manhDist(position, targetFood)
-        position = targetFood
-        availableFoods.remove(targetFood)
+        poppedNode = fringe.pop()
+        dist += priorities[poppedNode]
+        nodesLeft.remove(poppedNode)
 
-    # print(True, totalDist)
+        for node in nodesLeft:
+            currDist = eucDist(poppedNode, node)
+            fringe.update(node, currDist)
+            if priorities.get(node) == None or currDist < priorities[node]:
+                priorities[node] = currDist
 
-    return totalDist / 2
+    return dist
 
 
 class ClosestDotSearchAgent(SearchAgent):
