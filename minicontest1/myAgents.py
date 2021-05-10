@@ -17,20 +17,21 @@ from searchProblems import PositionSearchProblem
 import util
 import time
 import search
-
 """
 IMPORTANT
 `agent` defines which agent you will use. By default, it is set to ClosestDotAgent,
 but when you're ready to test your own agent, replace it with MyAgent
 """
+
+
 def createAgents(num_pacmen, agent='ClosestDotAgent'):
     return [eval(agent)(index=i) for i in range(num_pacmen)]
+
 
 class MyAgent(Agent):
     """
     Implementation of your agent.
     """
-
     def getAction(self, state):
         """
         Returns the next action the agent will take
@@ -51,30 +52,32 @@ class MyAgent(Agent):
 
         raise NotImplementedError()
 
+
 """
 Put any other SearchProblems or search methods below. You may also import classes/methods in
 search.py and searchProblems.py. (ClosestDotAgent as an example below)
 """
 
-class ClosestDotAgent(Agent):
 
+class ClosestDotAgent(Agent):
     def findPathToClosestDot(self, gameState):
         """
         Returns a path (a list of actions) to the closest dot, starting from
         gameState.
         """
         # Here are some useful elements of the startState
-        startPosition = gameState.getPacmanPosition(self.index)
-        food = gameState.getFood()
-        walls = gameState.getWalls()
+
+        # startPosition = gameState.getPacmanPosition(self.index)
+        # food = gameState.getFood()
+        # walls = gameState.getWalls()
         problem = AnyFoodSearchProblem(gameState, self.index)
 
-
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        return search.uniformCostSearch(problem)
 
     def getAction(self, state):
         return self.findPathToClosestDot(state)[0]
+
 
 class AnyFoodSearchProblem(PositionSearchProblem):
     """
@@ -90,7 +93,6 @@ class AnyFoodSearchProblem(PositionSearchProblem):
     You can use this search problem to help you fill in the findPathToClosestDot
     method.
     """
-
     def __init__(self, gameState, agentIndex):
         "Stores information from the gameState.  You don't need to change this."
         # Store the food for later reference
@@ -100,15 +102,30 @@ class AnyFoodSearchProblem(PositionSearchProblem):
         self.walls = gameState.getWalls()
         self.startState = gameState.getPacmanPosition(agentIndex)
         self.costFn = lambda x: 1
-        self._visited, self._visitedlist, self._expanded = {}, [], 0 # DO NOT CHANGE
+        self._visited, self._visitedlist, self._expanded = {}, [], 0  # DO NOT CHANGE
 
     def isGoalState(self, state):
         """
         The state is Pacman's position. Fill this in with a goal test that will
         complete the problem definition.
         """
-        x,y = state
+        x, y = state
 
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        import sys
+        closestFood = (0, 0)
+        closestDist = sys.maxsize
+        for x in range(1, self.food.width - 1):
+            for y in range(1, self.food.height - 1):
+                if self.food[x][y]:
+                    food = (x, y)
+                    currDist = manhDist(state, food)
+                    if currDist < closestDist:
+                        closestDist = currDist
+                        closestFood = food
 
+        return state == closestFood
+
+
+def manhDist(tup1, tup2):
+    return abs(tup1[0] - tup2[0]) + abs(tup1[1] - tup2[1])
