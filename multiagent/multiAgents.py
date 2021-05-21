@@ -161,7 +161,65 @@ class MinimaxAgent(MultiAgentSearchAgent):
         Returns whether or not the game state is a losing state
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        depth = self.depth
+        evalFn = self.evaluationFunction
+        # assuming numAgents never changes
+        numAgents = gameState.getNumAgents()
+
+        currStates = [(gameState, [])]
+        allWinStates = []
+        allLoseStates = []
+        # first round
+        for agentIndex in range(1, numAgents):
+            currStates, winStates, loseStates = iterHelper(
+                currStates, agentIndex)
+            allWinStates += winStates
+            allLoseStates += loseStates
+        depth -= 1
+
+        while depth > 0:
+            for agentIndex in range(numAgents):
+                currStates, winStates, loseStates = iterHelper(
+                    currStates, agentIndex)
+                allWinStates += winStates
+                allLoseStates += loseStates
+            depth -= 1
+
+        allFinalStates = currStates + allWinStates + allLoseStates
+
+        maxScore = float("-inf")
+        maxIndex = 0
+        for i in range(len(allFinalStates)):
+            state = allFinalStates[i]
+            gameState, _ = state
+            score = evalFn(gameState)
+            if score > maxScore:
+                maxScore = score
+                maxIndex = i
+        bestState = allFinalStates[maxIndex]
+        bestAction = bestState[1][0]
+        return bestAction
+
+
+def iterHelper(prevStates, agentIndex):
+    # all state representations in a new layer
+    nextStates = []
+    winStates = []
+    loseStates = []
+    for prevState in prevStates:
+        prevGameState, prevActions = prevState
+        newActions = prevGameState.getLegalActions(agentIndex)
+        for action in newActions:
+            successorGameState = prevGameState.generateSuccessor(
+                agentIndex, action)
+            successorState = (successorGameState, prevActions + [action])
+            if successorGameState.isWin():
+                winStates.append(successorState)
+            elif successorGameState.isLose():
+                loseStates.append(successorState)
+            else:
+                nextStates.append(successorState)
+    return nextStates, winStates, loseStates
 
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
