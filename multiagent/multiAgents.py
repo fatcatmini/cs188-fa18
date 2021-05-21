@@ -161,65 +161,85 @@ class MinimaxAgent(MultiAgentSearchAgent):
         Returns whether or not the game state is a losing state
         """
         "*** YOUR CODE HERE ***"
-        depth = self.depth
-        evalFn = self.evaluationFunction
-        # assuming numAgents never changes
-        numAgents = gameState.getNumAgents()
+        initActions = gameState.getLegalActions(0)
 
-        currStates = [(gameState, [])]
-        allWinStates = []
-        allLoseStates = []
-        # first round
-        for agentIndex in range(1, numAgents):
-            currStates, winStates, loseStates = iterHelper(
-                currStates, agentIndex)
-            allWinStates += winStates
-            allLoseStates += loseStates
-        depth -= 1
+        maxValue = float("-inf")
+        bestActionId = -1
 
-        while depth > 0:
-            for agentIndex in range(numAgents):
-                currStates, winStates, loseStates = iterHelper(
-                    currStates, agentIndex)
-                allWinStates += winStates
-                allLoseStates += loseStates
-            depth -= 1
+        for i in range(len(initActions)):
+            action = initActions[i]
+            successorGameState = gameState.generateSuccessor(0, action)
 
-        allFinalStates = currStates + allWinStates + allLoseStates
-
-        maxScore = float("-inf")
-        maxIndex = 0
-        for i in range(len(allFinalStates)):
-            state = allFinalStates[i]
-            gameState, _ = state
-            score = evalFn(gameState)
-            if score > maxScore:
-                maxScore = score
-                maxIndex = i
-        bestState = allFinalStates[maxIndex]
-        bestAction = bestState[1][0]
-        return bestAction
-
-
-def iterHelper(prevStates, agentIndex):
-    # all state representations in a new layer
-    nextStates = []
-    winStates = []
-    loseStates = []
-    for prevState in prevStates:
-        prevGameState, prevActions = prevState
-        newActions = prevGameState.getLegalActions(agentIndex)
-        for action in newActions:
-            successorGameState = prevGameState.generateSuccessor(
-                agentIndex, action)
-            successorState = (successorGameState, prevActions + [action])
-            if successorGameState.isWin():
-                winStates.append(successorState)
-            elif successorGameState.isLose():
-                loseStates.append(successorState)
+            currValue = 0
+            if successorGameState.isWin() or successorGameState.isLose():
+                currValue = self.evaluationFunction(successorGameState)
             else:
-                nextStates.append(successorState)
-    return nextStates, winStates, loseStates
+                currValue = self.value(successorGameState, 1)
+
+            if currValue > maxValue:
+                bestActionId = i
+                maxValue = currValue
+
+        return initActions[bestActionId]
+
+    def value(self, gameState, currLayer):
+        """
+        currLayer -> numAgents per cycle, depth cycles, starts with 0
+        """
+        # constants
+        numAgents = gameState.getNumAgents()
+        terminalLayer = self.depth * numAgents
+
+        if currLayer == terminalLayer:
+            # TODO
+            return self.evaluationFunction(gameState)
+        else:
+            if currLayer % numAgents == 0:
+                return self.maxValue(gameState, currLayer)
+            else:
+                return self.minValue(gameState, currLayer)
+
+    def maxValue(self, gameState, currLayer):
+        numAgents = gameState.getNumAgents()
+        agentIndex = currLayer % numAgents
+
+        maxValue = float("-inf")
+        currActions = gameState.getLegalActions(agentIndex)
+
+        for action in currActions:
+            successorGameState = gameState.generateSuccessor(
+                agentIndex, action)
+
+            currValue = 0
+            if successorGameState.isWin() or successorGameState.isLose():
+                currValue = self.evaluationFunction(successorGameState)
+            else:
+                currValue = self.value(successorGameState, currLayer + 1)
+
+            maxValue = max(maxValue, currValue)
+
+        return maxValue
+
+    def minValue(self, gameState, currLayer):
+        numAgents = gameState.getNumAgents()
+        agentIndex = currLayer % numAgents
+
+        minValue = float("inf")
+        currActions = gameState.getLegalActions(agentIndex)
+
+        for action in currActions:
+            successorGameState = gameState.generateSuccessor(
+                agentIndex, action)
+
+            currValue = 0
+            if successorGameState.isWin() or successorGameState.isLose():
+                currValue = self.evaluationFunction(successorGameState)
+            else:
+                currValue = self.value(successorGameState, currLayer + 1)
+
+            minValue = min(minValue, currValue)
+
+        return minValue
 
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
