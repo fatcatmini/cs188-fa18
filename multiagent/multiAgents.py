@@ -191,7 +191,6 @@ class MinimaxAgent(MultiAgentSearchAgent):
         terminalLayer = self.depth * numAgents
 
         if currLayer == terminalLayer:
-            # TODO
             return self.evaluationFunction(gameState)
         else:
             if currLayer % numAgents == 0:
@@ -251,7 +250,104 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        initActions = gameState.getLegalActions(0)
+
+        maxValue = float("-inf")
+        bestActionId = -1
+
+        alpha = float("-inf")
+        beta = float("inf")
+
+        for i in range(len(initActions)):
+            action = initActions[i]
+            successorGameState = gameState.generateSuccessor(0, action)
+
+            currValue = 0
+            if successorGameState.isWin() or successorGameState.isLose():
+                currValue = self.evaluationFunction(successorGameState)
+            else:
+                currValue = self.value(successorGameState, 1, alpha, beta)
+
+            if currValue > maxValue:
+                bestActionId = i
+                maxValue = currValue
+
+            if maxValue > beta:
+                return initActions[bestActionId]
+
+            alpha = max(alpha, maxValue)
+
+        return initActions[bestActionId]
+
+    def value(self, gameState, currLayer, alpha, beta):
+        """
+        currLayer -> numAgents per cycle, depth cycles, starts with 0
+        """
+        # constants
+        numAgents = gameState.getNumAgents()
+        terminalLayer = self.depth * numAgents
+
+        if currLayer == terminalLayer:
+            return self.evaluationFunction(gameState)
+        else:
+            if currLayer % numAgents == 0:
+                return self.maxValue(gameState, currLayer, alpha, beta)
+            else:
+                return self.minValue(gameState, currLayer, alpha, beta)
+
+    def maxValue(self, gameState, currLayer, alpha, beta):
+        numAgents = gameState.getNumAgents()
+        agentIndex = currLayer % numAgents
+
+        maxValue = float("-inf")
+        currActions = gameState.getLegalActions(agentIndex)
+
+        for action in currActions:
+            successorGameState = gameState.generateSuccessor(
+                agentIndex, action)
+
+            currValue = 0
+            if successorGameState.isWin() or successorGameState.isLose():
+                currValue = self.evaluationFunction(successorGameState)
+            else:
+                currValue = self.value(successorGameState, currLayer + 1,
+                                       alpha, beta)
+
+            maxValue = max(maxValue, currValue)
+
+            if maxValue > beta:
+                return maxValue
+
+            alpha = max(alpha, maxValue)
+
+        return maxValue
+
+    def minValue(self, gameState, currLayer, alpha, beta):
+        numAgents = gameState.getNumAgents()
+        agentIndex = currLayer % numAgents
+
+        minValue = float("inf")
+        currActions = gameState.getLegalActions(agentIndex)
+
+        for action in currActions:
+            successorGameState = gameState.generateSuccessor(
+                agentIndex, action)
+
+            currValue = 0
+            if successorGameState.isWin() or successorGameState.isLose():
+                currValue = self.evaluationFunction(successorGameState)
+            else:
+                currValue = self.value(successorGameState, currLayer + 1,
+                                       alpha, beta)
+
+            minValue = min(minValue, currValue)
+
+            if minValue < alpha:
+                return minValue
+
+            beta = min(beta, minValue)
+
+        return minValue
 
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
@@ -266,7 +362,85 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         legal moves.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        initActions = gameState.getLegalActions(0)
+
+        maxValue = float("-inf")
+        bestActionId = -1
+
+        for i in range(len(initActions)):
+            action = initActions[i]
+            successorGameState = gameState.generateSuccessor(0, action)
+
+            currValue = 0
+            if successorGameState.isWin() or successorGameState.isLose():
+                currValue = self.evaluationFunction(successorGameState)
+            else:
+                currValue = self.value(successorGameState, 1)
+
+            if currValue > maxValue:
+                bestActionId = i
+                maxValue = currValue
+
+        return initActions[bestActionId]
+
+    def value(self, gameState, currLayer):
+        """
+        currLayer -> numAgents per cycle, depth cycles, starts with 0
+        """
+        # constants
+        numAgents = gameState.getNumAgents()
+        terminalLayer = self.depth * numAgents
+
+        if currLayer == terminalLayer:
+            return self.evaluationFunction(gameState)
+        else:
+            if currLayer % numAgents == 0:
+                return self.maxValue(gameState, currLayer)
+            else:
+                return self.expValue(gameState, currLayer)
+
+    def maxValue(self, gameState, currLayer):
+        numAgents = gameState.getNumAgents()
+        agentIndex = currLayer % numAgents
+
+        maxValue = float("-inf")
+        currActions = gameState.getLegalActions(agentIndex)
+
+        for action in currActions:
+            successorGameState = gameState.generateSuccessor(
+                agentIndex, action)
+
+            currValue = 0
+            if successorGameState.isWin() or successorGameState.isLose():
+                currValue = self.evaluationFunction(successorGameState)
+            else:
+                currValue = self.value(successorGameState, currLayer + 1)
+
+            maxValue = max(maxValue, currValue)
+
+        return maxValue
+
+    def expValue(self, gameState, currLayer):
+        numAgents = gameState.getNumAgents()
+        agentIndex = currLayer % numAgents
+
+        currActions = gameState.getLegalActions(agentIndex)
+
+        totalScore = 0
+
+        for action in currActions:
+            successorGameState = gameState.generateSuccessor(
+                agentIndex, action)
+
+            currValue = 0
+            if successorGameState.isWin() or successorGameState.isLose():
+                currValue = self.evaluationFunction(successorGameState)
+            else:
+                currValue = self.value(successorGameState, currLayer + 1)
+
+            totalScore += currValue
+
+        return totalScore / len(currActions)
 
 
 def betterEvaluationFunction(currentGameState):
