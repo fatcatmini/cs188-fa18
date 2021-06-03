@@ -11,10 +11,9 @@
 # Student side autograding was added by Brad Miller, Nick Hay, and
 # Pieter Abbeel (pabbeel@cs.berkeley.edu).
 
-
 "Common code for autograders"
 
-import cgi
+import html
 import time
 import sys
 import json
@@ -26,8 +25,12 @@ import util
 class Grades:
     "A data structure for project grades, along with formatting code to display them"
 
-    def __init__(self, projectName, questionsAndMaxesList,
-                 gsOutput=False, edxOutput=False, muteOutput=False):
+    def __init__(self,
+                 projectName,
+                 questionsAndMaxesList,
+                 gsOutput=False,
+                 edxOutput=False,
+                 muteOutput=False):
         """
         Defines the grading scheme for a project
           projectName: project name
@@ -68,7 +71,8 @@ class Grades:
             incompleted = self.prereqs[q].difference(completedQuestions)
             if len(incompleted) > 0:
                 prereq = incompleted.pop()
-                print("""*** NOTE: Make sure to complete Question %s before working on Question %s,
+                print(
+                    """*** NOTE: Make sure to complete Question %s before working on Question %s,
 *** because Question %s builds upon your answer for Question %s.
 """ % (prereq, q, q, prereq))
                 continue
@@ -185,8 +189,8 @@ to follow your instructor's guidelines to receive credit on your project.
         total_score = sum(self.points.values())
         out_dct['score'] = total_score
         out_dct['max_score'] = total_possible
-        out_dct['output'] = "Total score (%d / %d)" % (
-            total_score, total_possible)
+        out_dct['output'] = "Total score (%d / %d)" % (total_score,
+                                                       total_possible)
 
         # individual tests
         tests_out = []
@@ -199,12 +203,13 @@ to follow your instructor's guidelines to receive credit on your project.
             test_out['max_score'] = self.maxes[name]
             # others
             is_correct = self.points[name] >= self.maxes[name]
-            test_out['output'] = "  Question {num} ({points}/{max}) {correct}".format(
-                num=(name[1] if len(name) == 2 else name),
-                points=test_out['score'],
-                max=test_out['max_score'],
-                correct=('X' if not is_correct else ''),
-            )
+            test_out[
+                'output'] = "  Question {num} ({points}/{max}) {correct}".format(
+                    num=(name[1] if len(name) == 2 else name),
+                    points=test_out['score'],
+                    max=test_out['max_score'],
+                    correct=('X' if not is_correct else ''),
+                )
             test_out['tags'] = []
             tests_out.append(test_out)
         out_dct['tests'] = tests_out
@@ -230,8 +235,7 @@ to follow your instructor's guidelines to receive credit on your project.
         </h3>
     """.format(total_score=total_score,
                total_possible=total_possible,
-               checkOrX=checkOrX
-               )
+               checkOrX=checkOrX)
         edxOutput.write(header)
 
         for q in self.questions:
@@ -259,8 +263,7 @@ to follow your instructor's guidelines to receive credit on your project.
                  max=self.maxes[q],
                  messages=messages,
                  checkOrX=checkOrX,
-                 points=self.points[q]
-                 )
+                 points=self.points[q])
             # print "*** output for Question %s " % q[1]
             # print output
             edxOutput.write(output)
@@ -292,13 +295,13 @@ to follow your instructor's guidelines to receive credit on your project.
 
     def addMessage(self, message, raw=False):
         if not raw:
-                # We assume raw messages, formatted for HTML, are printed separately
+            # We assume raw messages, formatted for HTML, are printed separately
             if self.mute:
                 util.unmutePrint()
             print('*** ' + message)
             if self.mute:
                 util.mutePrint()
-            message = cgi.escape(message)
+            message = html.escape(message)
         self.messages[self.currentQuestion].append(message)
 
     def addMessageToEmail(self, message):
@@ -313,7 +316,6 @@ class Counter(dict):
     """
     Dict with default 0
     """
-
     def __getitem__(self, idx):
         try:
             return dict.__getitem__(self, idx)
