@@ -68,7 +68,6 @@ class ValueIterationAgent(ValueEstimationAgent):
 
             for startState in allStates:
                 if self.mdp.isTerminal(startState):
-                    # TODO: implemented incorrectly?
                     continue
 
                 actions = self.mdp.getPossibleActions(startState)
@@ -202,3 +201,48 @@ class PrioritizedSweepingValueIterationAgent(AsynchronousValueIterationAgent):
 
     def runValueIteration(self):
         "*** YOUR CODE HERE ***"
+        allStates = self.mdp.getStates()
+        stateToPredecessors = {state: set() for state in allStates}
+
+        for state in allStates:
+            actions = self.mdp.getPossibleActions(state)
+            for action in actions:
+                nextStatesAndProbs = self.mdp.getTransitionStatesAndProbs(
+                    state, action)
+                for nextState, _ in nextStatesAndProbs:
+                    stateToPredecessors[nextState].add(state)
+
+        minPQ = util.PriorityQueue()
+
+        for s in allStates:
+            if self.mdp.isTerminal(s):
+                continue
+
+            qValues = [
+                self.getQValue(s, action)
+                for action in self.mdp.getPossibleActions(s)
+            ]
+            diff = abs(self.values[s] - max(qValues))
+            minPQ.push(s, -diff)
+
+        for _ in range(self.iterations):
+            if minPQ.isEmpty():
+                break
+
+            s = minPQ.pop()
+            if not self.mdp.isTerminal(s):
+                updatedVal = max([
+                    self.getQValue(s, action)
+                    for action in self.mdp.getPossibleActions(s)
+                ])
+                self.values[s] = updatedVal
+
+            for p in stateToPredecessors[s]:
+                qValues = [
+                    self.getQValue(p, action)
+                    for action in self.mdp.getPossibleActions(p)
+                ]
+                diff = abs(self.values[p] - max(qValues))
+
+                if diff > self.theta:
+                    minPQ.update(p, -diff)
